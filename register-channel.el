@@ -19,9 +19,10 @@
 
 (require 'register)
 
-(defvar register-channel-backup-register ?`
+(defcustom register-channel-backup-register ?`
   "The backup register used to save the current point / window
-  configuration etc. when you do register-channel switching.")
+  configuration etc. when you do register-channel switching."
+  :type '(character))
 
 (setq register-channel-last-save-type nil)
 (defun register-channel-save-backup (type register-val)
@@ -33,6 +34,7 @@
 (defun register-channel-last-command-char ()
   "Returns the character corresponding to last command, stripping
   any modifiers. E.g. if last command is M-1, should return 1."
+  ;; C.f. digit-argument
   (let ((char (if (integerp last-command-event)
                    last-command-event
                  (get last-command-event 'ascii-character))))
@@ -50,11 +52,11 @@ The replaced content is saved in register
 `register-channel-backup-register' (defaults to ``'), so that you
 can jump back easily."
   (interactive "P")
-  ;; Refer to code in digit-argument and register.el.
+  ;; Refer to code in register.el.
   (let* ((register (register-channel-last-command-char))
          (val (get-register register)))
     (cond ((not val)
-           (message "No content in register %c" register))
+           (user-error "No content in register %c" register))
           ((or (markerp val)
                (and (consp val)
                     (or (eq (car val) 'file)
@@ -81,28 +83,58 @@ can jump back easily."
           ('t
            (insert-register register arg)))))
 
+(defcustom register-channel-marker-advance t
+"If true, by default register markers will advance when you
+insert text at it."
+:type '(boolean))
+
 (defun register-channel-save-point (&optional arg)
   "Save point to register defined by last key press. E.g. if this
 function is bound to ESC M-1, the point is saved in register 1."
   (interactive "P")
   (let ((digit-char (register-channel-last-command-char)))
     (point-to-register digit-char)
+    (if register-channel-marker-advance
+        (setq arg (not arg)))
     (set-marker-insertion-type (get-register digit-char) arg)
-    (message "Point stored in register %c" digit-char)))
+    (message "Point stored in register %c [%s]"
+             digit-char
+             (if arg "advance" "stay"))))
 
-(defun register-channel-save-text (&optional delete-flag)
-  "Copy region to register defined by last key press."
+(defcustom register-channel-move-by-default nil
+  "If true, register-channel-move-text deletes original text."
+  :type '(boolean))
+
+(defun register-channel-move-text (start end &optional delete-flag)
+  "Copy region to register location."
+  (interactive "r\nP")
+  (if register-channel-move-by-default
+      (setq delete-flag (not delete-flag)))
+  (let* ((register (register-channel-last-command-char))
+         (m (get-register register)))
+    (if (not (markerp m))
+        (user-error "Register %c is not a marker" register)
+      (let ((string (filter-buffer-substring start end delete-flag)))
+        (with-current-buffer (marker-buffer m)
+          (save-excursion
+            (goto-char (marker-position m))
+            (if (marker-insertion-type m)
+                (insert-before-markers string)
+              (insert string)
+              (message "normal insert")))))
+      (if (and (not delete-flag)
+               (called-interactively-p 'interactive))
+          (indicate-copied-region)))))
+
+(defun register-channel-dwim (&optional arg)
+  "Either save point to register, or move text if there is an
+  active region and register contains marker."
   (interactive "P")
-  (let ((digit-char (register-channel-last-command-char)))
-    (copy-to-register digit-char
-                      (region-beginning) (region-end) delete-flag)
-    (let* ((killed-text (get-register digit-char))
-           (message-len (min (length killed-text) 40)))
-      (if (= (point) (region-beginning))
-          (message "Saved text until \"%s\" to register %c"
-                   (substring killed-text (- message-len)) digit-char)
-        (message "Saved text from \"%s\" to register %c"
-                 (substring killed-text 0 message-len) digit-char)))))
+  (let* ((register (register-channel-last-command-char))
+         (m (get-register register)))
+    (if (and (use-region-p) (markerp m))
+        (call-interactively 'register-channel-move-text)
+      (call-interactively 'register-channel-jump-or-insert))))
 
 (defun register-channel-save-window-configuration (&optional arg)
   "Save window configuration to register defined by last key press."
@@ -120,23 +152,23 @@ function is bound to ESC M-1, the point is saved in register 1."
 
 (defun register-channel-default-keymap ()
   (let ((map (make-sparse-keymap)))
-  (define-key map (kbd "M-g M-1") 'register-channel-save-point)
-  (define-key map (kbd "M-g M-2") 'register-channel-save-point)
-  (define-key map (kbd "M-g M-3") 'register-channel-save-point)
-  (define-key map (kbd "M-g M-4") 'register-channel-save-point)
-  (define-key map (kbd "M-g M-5") 'register-channel-save-point)
-  (define-key map (kbd "M-g M-6") 'register-channel-save-window-configuration)
-  (define-key map (kbd "M-g M-7") 'register-channel-save-window-configuration)
-  (define-key map (kbd "M-g M-8") 'register-channel-save-window-configuration)
-  (define-key map (kbd "M-`") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-1") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-2") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-3") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-4") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-5") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-6") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-7") 'register-channel-jump-or-insert)
-  (define-key map (kbd "M-8") 'register-channel-jump-or-insert)
+  (define-key map (kbd "M-g 1") 'register-channel-save-point)
+  (define-key map (kbd "M-g 2") 'register-channel-save-point)
+  (define-key map (kbd "M-g 3") 'register-channel-save-point)
+  (define-key map (kbd "M-g 4") 'register-channel-save-point)
+  (define-key map (kbd "M-g 5") 'register-channel-save-point)
+  (define-key map (kbd "M-g 6") 'register-channel-save-window-configuration)
+  (define-key map (kbd "M-g 7") 'register-channel-save-window-configuration)
+  (define-key map (kbd "M-g 8") 'register-channel-save-window-configuration)
+  (define-key map (kbd "M-`") 'register-channel-dwim)
+  (define-key map (kbd "M-1") 'register-channel-dwim)
+  (define-key map (kbd "M-2") 'register-channel-dwim)
+  (define-key map (kbd "M-3") 'register-channel-dwim)
+  (define-key map (kbd "M-4") 'register-channel-dwim)
+  (define-key map (kbd "M-5") 'register-channel-dwim)
+  (define-key map (kbd "M-6") 'register-channel-dwim)
+  (define-key map (kbd "M-7") 'register-channel-dwim)
+  (define-key map (kbd "M-8") 'register-channel-dwim)
   map))
 
 (defvar register-channel-mode-map (register-channel-default-keymap)
