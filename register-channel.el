@@ -45,6 +45,9 @@
   configuration etc. when you do register-channel switching."
   :type '(character))
 
+;; Keep track of backup type; only backup in the first of same
+;; type. E.g. swithcing to marker position 1 then 2, the backup stores
+;; old pointer position before jumping to marker position 1.
 (setq register-channel-last-save-type nil)
 (defun register-channel-save-backup (type register-val)
   (unless (and (eq last-command 'jump-or-insert-self-register)
@@ -70,7 +73,7 @@ what's in register 1 if it is a position or window / frame
 configuration, otherwise insert the contents.
 
 The replaced content is saved in register
-`register-channel-backup-register' (defaults to ``'), so that you
+`register-channel-backup-register' (defaults to \`), so that you
 can jump back easily."
   (interactive "P")
   ;; Refer to code in register.el.
@@ -111,7 +114,11 @@ insert text at it."
 
 (defun register-channel-save-point (&optional arg)
   "Save point to register defined by last key press. E.g. if this
-function is bound to ESC M-1, the point is saved in register 1."
+function is bound to M-g M-1, the point is saved in register 1.
+
+With prefix ARG, the register marker will not advance when text
+is inserted at its position. This behavior can be customized by
+setting `register-channel-marker-advance'."
   (interactive "P")
   (let ((digit-char (register-channel-last-command-char)))
     (point-to-register digit-char)
@@ -123,11 +130,17 @@ function is bound to ESC M-1, the point is saved in register 1."
              (if arg "advance" "stay"))))
 
 (defcustom register-channel-move-by-default nil
-  "If true, register-channel-move-text deletes original text."
+  "If true, register-channel-move-text deletes original text
+without prefix argument."
   :type '(boolean))
 
 (defun register-channel-move-text (start end &optional delete-flag)
-  "Copy region to register location."
+  "Copy region to register location. If DELETE-FLAG is true,
+perform a kill instead of copy; this does not modify the kill
+ring.
+
+Customize `register-channel-move-by-default' to toggle the
+copy/kill behavior."
   (interactive "r\nP")
   (if register-channel-move-by-default
       (setq delete-flag (not delete-flag)))
@@ -173,6 +186,7 @@ function is bound to ESC M-1, the point is saved in register 1."
 
 (defun register-channel-default-keymap ()
   (let ((map (make-sparse-keymap)))
+  ;; TODO: more customization; maybe define a prefix key.
   (define-key map (kbd "M-g 1") 'register-channel-save-point)
   (define-key map (kbd "M-g 2") 'register-channel-save-point)
   (define-key map (kbd "M-g 3") 'register-channel-save-point)
@@ -181,6 +195,7 @@ function is bound to ESC M-1, the point is saved in register 1."
   (define-key map (kbd "M-g 6") 'register-channel-save-window-configuration)
   (define-key map (kbd "M-g 7") 'register-channel-save-window-configuration)
   (define-key map (kbd "M-g 8") 'register-channel-save-window-configuration)
+  ;; TODO: use register-channel-backup-register.
   (define-key map (kbd "M-`") 'register-channel-dwim)
   (define-key map (kbd "M-1") 'register-channel-dwim)
   (define-key map (kbd "M-2") 'register-channel-dwim)
@@ -197,7 +212,7 @@ function is bound to ESC M-1, the point is saved in register 1."
 
 ;;;###autoload
 (define-minor-mode register-channel-mode
-  "Toggle register-channel mode"
+  "Toggle register-channel mode."
   :keymap register-channel-mode-map
   :global t)
 
