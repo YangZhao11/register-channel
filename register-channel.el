@@ -1,21 +1,33 @@
 ;;; register-channel.el --- Jump around fast using registers
 
-;; Copyright 2011 Google Inc. All Rights Reserved.
+;; Copyright (C) 2014  Yang Zhao
 
-;; Author: Yang Zhao <zhyang@google.com>
-;; Maintainer: Yang Zhao <zhyang@google.com>
-;; Created: Mar 29 2011
-;; Version: 0.1
+;; Author: Yang Zhao <YangZhao11users.noreply.github.com>
+;; Keywords: convenience
 
-;; To use, put this in your init file:
-;; (require 'register-channel)
-;; (register-channel-mode 1)
+;; Permission is hereby granted, free of charge, to any person obtaining a copy
+;; of this software and associated documentation files (the "Software"), to deal
+;; in the Software without restriction, including without limitation the rights
+;; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+;; copies of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+
+;; The above copyright notice and this permission notice shall be included in all
+;; copies or substantial portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
+
+;;; Commentary:
+
 ;;
-;; Then you can use ESC ESC 1 to put point position into register
-;; 1. This works for register 1 to 5; 6 and 7 by default holds texts,
-;; 8 and 9 holds window configurations. To utilize these registers,
-;; use M-1 etc. The old position / window configuration are
-;; automatically stored into register 0, so you can easily go back.
+
+;;; Code:
 
 (require 'register)
 
@@ -181,3 +193,4 @@ function is bound to ESC M-1, the point is saved in register 1."
   :global t)
 
 (provide 'register-channel)
+;;; register-channel.el ends here
