@@ -55,7 +55,7 @@
 ;; old pointer position before jumping to marker position 1.
 (setq register-channel-last-save-type nil)
 (defun register-channel-save-backup (type register-val)
-  (unless (and (eq last-command 'jump-or-insert-self-register)
+  (unless (and (eq last-command 'register-channel-jump-or-insert)
                (eq register-channel-last-save-type type))
     (set-register register-channel-backup-register register-val)
     (setq register-channel-last-save-type type)))
@@ -157,10 +157,7 @@ copy/kill behavior."
         (with-current-buffer (marker-buffer m)
           (save-excursion
             (goto-char (marker-position m))
-            (if (marker-insertion-type m)
-                (insert-before-markers string)
-              (insert string)
-              (message "normal insert")))))
+            (insert string))))
       (if (and (not delete-flag)
                (called-interactively-p 'interactive))
           (indicate-copied-region)))))
@@ -170,10 +167,12 @@ copy/kill behavior."
   active region and register contains marker."
   (interactive "P")
   (let* ((register (register-channel-last-command-char))
-         (m (get-register register)))
+         (m (get-register register))
+         (command 'register-channel-jump-or-insert))
     (if (and (use-region-p) (markerp m))
-        (call-interactively 'register-channel-move-text)
-      (call-interactively 'register-channel-jump-or-insert))))
+        (setq command 'register-channel-move-text))
+    (call-interactively command)
+    (setq this-command command)))
 
 (defun register-channel-save-window-configuration (&optional arg)
   "Save window configuration to register defined by last key press."
