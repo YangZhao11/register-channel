@@ -40,6 +40,11 @@
 
 (require 'register)
 
+(defgroup register-channel nil
+  "Jump around fast using registers."
+  :group 'convenience
+  :prefix "register-channel-")
+
 (defcustom register-channel-backup-register ?`
   "The backup register used to save the current point / window
   configuration etc. when you do register-channel switching."
