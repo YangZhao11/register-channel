@@ -153,11 +153,16 @@ copy/kill behavior."
          (m (get-register register)))
     (if (not (markerp m))
         (user-error "Register %c is not a marker" register)
-      (let ((string (filter-buffer-substring start end delete-flag)))
+      (let* ((rect rectangle-mark-mode)
+             (content (cond
+                       ((not rect) (filter-buffer-substring start end delete-flag))
+                       (delete-flag (delete-extract-rectangle start end))
+                       ('t (extract-rectangle start end)))))
         (with-current-buffer (marker-buffer m)
           (save-excursion
             (goto-char (marker-position m))
-            (insert string))))
+            (if rect (insert-rectangle content)
+              (insert string)))))
       (if (and (not delete-flag)
                (called-interactively-p 'interactive))
           (indicate-copied-region)))))
