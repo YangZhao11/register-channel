@@ -153,7 +153,7 @@ copy/kill behavior."
          (m (get-register register)))
     (if (not (markerp m))
         (user-error "Register %c is not a marker" register)
-      (let* ((rect rectangle-mark-mode)
+      (let* ((rect (and (boundp 'rectangle-mark-mode) rectangle-mark-mode))
              (content (cond
                        ((not rect) (filter-buffer-substring start end delete-flag))
                        (delete-flag (delete-extract-rectangle start end))
@@ -162,7 +162,7 @@ copy/kill behavior."
           (save-excursion
             (goto-char (marker-position m))
             (if rect (insert-rectangle content)
-              (insert string)))))
+              (insert content)))))
       (if (and (not delete-flag)
                (called-interactively-p 'interactive))
           (indicate-copied-region)))))
@@ -179,18 +179,18 @@ copy/kill behavior."
     (call-interactively command)
     (setq this-command command)))
 
-(defun register-channel-save-window-configuration (&optional arg)
+(defun register-channel-save-window-configuration ()
   "Save window configuration to register defined by last key press."
-  (interactive "P")
+  (interactive)
   (let ((digit-char (register-channel-last-command-char)))
-    (window-configuration-to-register digit-char arg)
+    (window-configuration-to-register digit-char)
     (message "Window configuration saved in register %c" digit-char)))
 
-(defun register-channel-save-frame-configuration (&optional arg)
+(defun register-channel-save-frame-configuration ()
   "Save frame configuration to register defined by last key press."
-  (interactive "P")
+  (interactive)
   (let ((digit-char (register-channel-last-command-char)))
-    (frame-configuration-to-register digit-char arg)
+    (frame-configuration-to-register digit-char)
     (message "Frame configuration saved in register %c" digit-char)))
 
 (defun register-channel-default-keymap ()
