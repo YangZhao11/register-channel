@@ -19,3 +19,5 @@ register `` ` ``, so you can easily go back with ``M-` ``.
 
 When you press `M-1` with an active region, copy selected text to
 where register `1` is.
+
+This package is available on [MELPA](http://melpa.org/).
