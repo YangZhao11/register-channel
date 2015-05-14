@@ -179,6 +179,14 @@ copy/kill behavior."
     (call-interactively command)
     (setq this-command command)))
 
+(defun register-channel-describe-register ()
+  "Show content of register. Bind to M-g N for read-only effect."
+  (interactive)
+  (let ((digit-char (register-channel-last-command-char)))
+    (message
+     (with-output-to-string
+       (describe-register-1 digit-char)))))
+
 (defun register-channel-save-window-configuration ()
   "Save window configuration to register defined by last key press."
   (interactive)
