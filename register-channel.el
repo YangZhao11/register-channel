@@ -93,8 +93,11 @@ can jump back easily."
            (let ((save-point (point-marker)))
              (jump-to-register register arg)
              (register-channel-save-backup 'point save-point)))
-          ((and (consp val)
-                (frame-configuration-p (car val)))
+          ((or (and (consp val)
+                    (frame-configuration-p (car val)))
+               (and (registerv-p val)
+                    (vectorp (registerv-data val))
+                    (frameset-p (elt (registerv-data val) 0))))
            (let ((save-frame-configuration (current-frame-configuration))
                  (save-point (point-marker)))
              (jump-to-register register arg)
@@ -198,7 +201,7 @@ copy/kill behavior."
   "Save frame configuration to register defined by last key press."
   (interactive)
   (let ((digit-char (register-channel-last-command-char)))
-    (frame-configuration-to-register digit-char)
+    (frameset-to-register digit-char)
     (message "Frame configuration saved in register %c" digit-char)))
 
 (defun register-channel-default-keymap ()
