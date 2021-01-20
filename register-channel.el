@@ -1,6 +1,6 @@
-;;; register-channel.el --- Jump around fast using registers
+;;; register-channel.el --- Jump around fast using registers -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014  Yang Zhao
+;; Copyright (C) 2021  Yang Zhao
 
 ;; Author: Yang Zhao <YangZhao11@users.noreply.github.com>
 ;; Keywords: convenience
